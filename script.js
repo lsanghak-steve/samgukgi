@@ -18,6 +18,7 @@ let playerState = {
     rulerId: 0,         // officers 목록에서 0번째 인물(조조)을 군주로 지정
     fame: 150,          // 현재 명성 수치
     actionPoints: 3,    // 턴마다 쓸 수 있는 명령서 횟수
+    maxActionPoints: 3, // 수동 변경 가능한 명령서 기준치 (새 턴 시작 시 이 수치로 충전됨)
     year: 190,          // 게임 시작 연도
     month: 1            // 게임 시작 월
 };
@@ -1377,8 +1378,9 @@ function modifyActionPoints() {
         return;
     }
     
-    // 5. 값 반영 및 상단 상태바 리렌더링
+    // 5. 값 반영 및 상단 상태바 리렌더링 (최대치도 함께 수정)
     playerState.actionPoints = newValue;
+    playerState.maxActionPoints = newValue;
     updateStatusBar();
 }
 
@@ -1641,8 +1643,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 4. 명령서 회복 ---
-        const recoveredPoints = 3 + Math.floor(playerState.fame / 100);
-        playerState.actionPoints = recoveredPoints;
+        // 사용자가 설정한 최대 명령서(maxActionPoints) 기준으로 초기화 (기본 명성 비례 회복 무효화)
+        playerState.actionPoints = playerState.maxActionPoints || (3 + Math.floor(playerState.fame / 100));
 
         // --- 4.5. 타 세력(적군)의 재야 장수 등용 AI 시뮬레이션 ---
         let aiLogHTML = '';
