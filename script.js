@@ -982,10 +982,41 @@ function startWarExecution() {
     // 6. 진군 성공 결과 출력
     resultDiv.innerHTML = `<div class="result-msg">⚔️ 출병 개시! ${selectedIdxs.length}명의 장수와 총 ${totalWarSoldiers.toLocaleString()}명의 병사가 출발지 [${startCityName}]에서 [${targetCityName}]을(를) 향해 진군합니다!</div>`;
     
-    // 7. 1.5초 후 전투 시뮬레이션을 동작시킵니다.
-    setTimeout(() => {
-        executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers, startCityName);
-    }, 1500);
+    // 7. 시각적 진군 애니메이션 (지도 위 🐎 아이콘 이동)
+    const mapContainer = document.querySelector('.map-container');
+    const startNode = cities[startCityName];
+    const targetNode = cities[targetCityName];
+
+    if (mapContainer && startNode && targetNode) {
+        // 아이콘 엘리먼트 생성
+        const troopIcon = document.createElement('div');
+        troopIcon.className = 'troop-marching-icon';
+        troopIcon.innerHTML = '🐎';
+        
+        // 초기 위치 세팅 (출발지)
+        troopIcon.style.left = startNode.x + '%';
+        troopIcon.style.top = startNode.y + '%';
+        mapContainer.appendChild(troopIcon);
+
+        // 약간의 딜레이 후 목적지 좌표로 변경하여 CSS transition 발동
+        setTimeout(() => {
+            troopIcon.style.left = targetNode.x + '%';
+            troopIcon.style.top = targetNode.y + '%';
+        }, 50);
+
+        // 1.5초(애니메이션 끝) 후 돔 제거 및 전투 화면 진입
+        setTimeout(() => {
+            if (troopIcon.parentNode) {
+                troopIcon.parentNode.removeChild(troopIcon);
+            }
+            executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers, startCityName);
+        }, 1500);
+    } else {
+        // 지도를 못찾는 등 예외 상황 시 기존 타이머 로직
+        setTimeout(() => {
+            executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers, startCityName);
+        }, 1500);
+    }
 }
 
 // 자동 전투 시뮬레이션을 실행하는 함수입니다.
@@ -993,13 +1024,43 @@ function executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers,
     const mainContent = document.querySelector('.main-content');
     const targetCity = cities[targetCityName];
     
-    // 1. 전투 중계 화면 렌더링
+    // 1. 전투 중계 화면 렌더링 (UI 개편)
     mainContent.innerHTML = `
-        <div class="domestic-menu" style="text-align: left; max-width: 480px; margin: 0 auto;">
-            <h3 style="text-align: center; color: #e74c3c;">⚔️ [${targetCityName}] 공방전 중계</h3>
-            <div id="battle-log-area" style="background-color: #121212; padding: 15px; border-radius: 6px; border: 1px solid #3a3a3a; height: 260px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; line-height: 1.6; color: #e0e0e0; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
-                <!-- 전투 로그 동적 출력 -->
+        <div class="domestic-menu" style="text-align: left; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column;">
+            <h3 style="text-align: center; color: #e74c3c; margin-top:0;">⚔️ [${targetCityName}] 공방전 중계</h3>
+            
+            <!-- 상단 대치 구도 (HP 바 포함) -->
+            <div id="battle-ui-container" class="battle-versus-container">
+                <div class="battle-side" id="att-side">
+                    <h4>조조군 선봉장</h4>
+                    <div class="officer-name" id="att-officer-name">선봉장</div>
+                    <div style="font-size: 0.85rem; color:#ccc;">병력: <span id="att-soldier-count">0</span></div>
+                    <div class="hp-bar-container">
+                        <div class="hp-bar-fill" id="att-hp-bar"></div>
+                    </div>
+                </div>
+                
+                <div class="battle-vs-mark">VS</div>
+                
+                <div class="battle-side" id="def-side">
+                    <h4>${targetCity.owner}군 수비장</h4>
+                    <div class="officer-name" id="def-officer-name">수비장수</div>
+                    <div style="font-size: 0.85rem; color:#ccc;">병력: <span id="def-soldier-count">0</span></div>
+                    <div class="hp-bar-container">
+                        <div class="hp-bar-fill" id="def-hp-bar"></div>
+                    </div>
+                </div>
             </div>
+
+            <!-- 중앙 이펙트 팝업 존 -->
+            <div id="battle-effect-zone" class="battle-effect-zone">
+                <!-- 데미지 텍스트 동적 생성 -->
+            </div>
+
+            <!-- 하단 텍스트 로그 -->
+            <div id="battle-log-area" style="background-color: #121212; padding: 10px; border-radius: 6px; border: 1px solid #3a3a3a; height: 160px; overflow-y: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.8rem; line-height: 1.5; color: #e0e0e0; margin-bottom: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
+            </div>
+            
             <div id="battle-footer" style="text-align: center;">
                 <button class="btn btn-sub" id="btn-battle-done" style="display: none; width: 100%;">지도 복귀</button>
             </div>
@@ -1069,15 +1130,66 @@ function executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers,
         }
     });
 
-    // 4. 초기 변수 세팅
+    // 4. 초기 변수 및 UI 요소 세팅
     let attSoldiers = totalWarSoldiers;
     let defSoldiers = targetCity.soldiers;
+    const initialAttSoldiers = attSoldiers;
+    const initialDefSoldiers = defSoldiers;
     const attTraining = cities[startCityName].training; // 출발지 훈련도
     const defTraining = targetCity.training;
     
-    addLog(`📢 조조군 선봉장 <strong>[${bestAttOfficer.name}]</strong> (무력 ${bestAttOfficer.force}) 출진!`, '#3498db');
-    addLog(`📢 ${targetCity.owner}군 수비장수 <strong>[${defender.officer}]</strong> (무력 ${defender.force}) 수비 돌입!`, '#e67e22');
-    addLog(`⚔️ 조조군 <strong>${attSoldiers.toLocaleString()}명</strong> vs 적군 <strong>${defSoldiers.toLocaleString()}명</strong> 대치 시작!`, '#ffd700');
+    const attNameEl = document.getElementById('att-officer-name');
+    const defNameEl = document.getElementById('def-officer-name');
+    const attCountEl = document.getElementById('att-soldier-count');
+    const defCountEl = document.getElementById('def-soldier-count');
+    const attHpBar = document.getElementById('att-hp-bar');
+    const defHpBar = document.getElementById('def-hp-bar');
+    const effectZone = document.getElementById('battle-effect-zone');
+    const uiContainer = document.getElementById('battle-ui-container');
+
+    // UI 정보 초기화
+    attNameEl.innerText = `${bestAttOfficer.name} (무력 ${bestAttOfficer.force})`;
+    defNameEl.innerText = `${defender.officer} (무력 ${defender.force})`;
+
+    function updateHpUi() {
+        attCountEl.innerText = attSoldiers.toLocaleString();
+        defCountEl.innerText = defSoldiers.toLocaleString();
+        
+        let attPct = Math.max(0, (attSoldiers / initialAttSoldiers) * 100);
+        let defPct = Math.max(0, (defSoldiers / initialDefSoldiers) * 100);
+        
+        attHpBar.style.width = attPct + '%';
+        defHpBar.style.width = defPct + '%';
+        
+        if (attPct < 30) attHpBar.classList.add('danger');
+        if (defPct < 30) defHpBar.classList.add('danger');
+    }
+    updateHpUi();
+
+    // 팝업 이펙트 생성 헬퍼
+    function spawnDamageEffect(text, color, isLeft) {
+        const popup = document.createElement('div');
+        popup.className = 'damage-popup';
+        popup.style.color = color;
+        popup.innerText = text;
+        popup.style.left = isLeft ? '20%' : '60%'; // 좌우 위치 구분
+        effectZone.appendChild(popup);
+        
+        setTimeout(() => {
+            if (popup.parentNode) popup.parentNode.removeChild(popup);
+        }, 900); // 애니메이션 0.8s 후 조금 뒤 삭제
+    }
+
+    // 일기토 화면 흔들림 효과
+    function triggerShake() {
+        uiContainer.classList.remove('shake-effect');
+        void uiContainer.offsetWidth; // 리플로우 강제 (애니메이션 재시작)
+        uiContainer.classList.add('shake-effect');
+    }
+
+    addLog(`📢 조조군 선봉장 <strong>[${bestAttOfficer.name}]</strong> 출진!`, '#3498db');
+    addLog(`📢 ${targetCity.owner}군 수비장수 <strong>[${defender.officer}]</strong> 수비 돌입!`, '#e67e22');
+    addLog(`⚔️ 전투 개시!`, '#ffd700');
     addLog(`--------------------------------------------------`, '#555');
 
     let round = 1;
@@ -1103,21 +1215,35 @@ function executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers,
         // 난수로 일기토 및 특수 연출 확률 추가
         const eventChance = Math.random();
         if (eventChance < 0.15) {
+            triggerShake();
+            spawnDamageEffect("💥 일기토!", "#f1c40f", true);
+            spawnDamageEffect("💥 일기토!", "#f1c40f", false);
             addLog(`🔥 <em>일기토 발생! [${bestAttOfficer.name}]과 [${defender.officer}]이 합을 겨룹니다!</em>`, '#f1c40f');
             if (bestAttOfficer.force > defender.force) {
-                addLog(`💥 [${bestAttOfficer.name}]의 맹렬한 공격으로 적 수비대의 사기가 크게 꺾입니다!`);
+                addLog(`💥 [${bestAttOfficer.name}]의 맹렬한 공격으로 적 사기가 꺾입니다!`);
                 toDefDamage = Math.floor(toDefDamage * 1.5);
             } else {
-                addLog(`💥 [${defender.officer}]의 철벽 같은 반격에 조조군이 주춤합니다!`);
+                addLog(`💥 [${defender.officer}]의 철벽 반격에 조조군이 주춤합니다!`);
                 toAttDamage = Math.floor(toAttDamage * 1.5);
             }
+        } else {
+            // 일반 타격 이펙트
+            spawnDamageEffect("⚔️", "#bdc3c7", true);
         }
 
         attSoldiers = Math.max(0, attSoldiers - toAttDamage);
         defSoldiers = Math.max(0, defSoldiers - toDefDamage);
 
-        addLog(`🗡️ 조조군 피해: <span style="color: #e74c3c;">-${toAttDamage.toLocaleString()}명</span> | 잔여: ${attSoldiers.toLocaleString()}명`);
-        addLog(`🛡️ 적군 피해: <span style="color: #e74c3c;">-${toDefDamage.toLocaleString()}명</span> | 잔여: ${defSoldiers.toLocaleString()}명`);
+        // 데미지 팝업 연출
+        setTimeout(() => {
+            spawnDamageEffect(`-${toAttDamage}`, "#e74c3c", true);
+            spawnDamageEffect(`-${toDefDamage}`, "#e74c3c", false);
+        }, 200);
+
+        // UI 체력 바 및 텍스트 즉시 갱신
+        updateHpUi();
+
+        addLog(`🗡️ 조조군: <span style="color: #e74c3c;">-${toAttDamage.toLocaleString()}</span> | 🛡️ 적군: <span style="color: #e74c3c;">-${toDefDamage.toLocaleString()}</span>`);
         addLog(`--------------------------------------------------`, '#555');
 
         round++;

@@ -577,6 +577,122 @@ body {
     color: white;
 }
 
+/* --- [전술 시각화 및 전투 UI] --- */
+
+/* 병력 이동 진군 아이콘 (지도 위) */
+.troop-marching-icon {
+    position: absolute;
+    font-size: 1.8rem;
+    pointer-events: none; /* 클릭 방해 금지 */
+    z-index: 1000;
+    transition: all 1.5s cubic-bezier(0.25, 0.1, 0.25, 1); /* 1.5초 동안 top, left 부드러운 이동 */
+    text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    transform: translate(-50%, -50%); /* 중심점 맞추기 */
+}
+
+/* 전투 중계 상단 대치 구도 영역 */
+.battle-versus-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a1a1a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.battle-side {
+    width: 42%;
+    text-align: center;
+}
+
+.battle-side h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.95rem;
+    color: #bbb;
+}
+
+.battle-side .officer-name {
+    font-weight: bold;
+    color: #f39c12;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* 체력(병력) 바 컨테이너 */
+.hp-bar-container {
+    width: 100%;
+    height: 12px;
+    background-color: #333;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid #111;
+}
+
+/* 체력(병력) 바 게이지 */
+.hp-bar-fill {
+    height: 100%;
+    background-color: #2ecc71; /* 기본 초록색 */
+    width: 100%;
+    transition: width 0.3s ease-out, background-color 0.3s ease;
+}
+.hp-bar-fill.danger {
+    background-color: #e74c3c; /* 체력 낮을 때 붉은색 */
+}
+
+/* VS 마크 */
+.battle-vs-mark {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #e74c3c;
+    text-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+}
+
+/* 데미지 팝업 이펙트 영역 */
+.battle-effect-zone {
+    position: relative;
+    height: 60px;
+    background-color: #0f0f0f;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px inset #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.damage-popup {
+    position: absolute;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0,0,0,1);
+    animation: popupFade 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+/* 데미지 팝업 애니메이션 */
+@keyframes popupFade {
+    0% { transform: translateY(10px) scale(0.8); opacity: 0; }
+    20% { transform: translateY(-5px) scale(1.2); opacity: 1; }
+    100% { transform: translateY(-20px) scale(1); opacity: 0; }
+}
+
+/* 일기토 등 강한 타격 시 컨테이너 흔들림 */
+.shake-effect {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-2px, 0, 0); }
+    20%, 80% { transform: translate3d(4px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+    40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
 
 
 
