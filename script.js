@@ -140,6 +140,11 @@ let selectedCityName = '허창';
 // 현재 어떤 메뉴가 열려 있는지 상태를 기록하여 수정 후 화면을 즉시 새로고침하는 변수입니다.
 let currentMenuState = 'main';
 
+// --- [오토 플레이 상태 변수] ---
+let autoPlayInterval = null;
+let isAutoPlaying = false;
+let isBattleRunning = false;
+
 // 100명의 삼국지 무작위를 자동 생성하고 다른 세력 도시들에 분배 배치하는 초기화 함수입니다.
 function initializeGameData() {
     const surnames = ['유', '조', '손', '사마', '제갈', '장', '관', '마', '황', '조', '등', '강', '위', '순', '곽', '가', '동', '여', '주', '육', '감', '허', '방', '서', '한'];
@@ -1159,6 +1164,14 @@ function executeBattleSimulation(targetCityName, selectedIdxs, totalWarSoldiers,
 
         // 복귀 버튼 활성화
         btnDone.style.display = 'block';
+
+        // [오토 플레이] 중이라면 2.5초 뒤 자동 복귀(클릭) 및 전투 플래그 해제
+        if (isAutoPlaying) {
+            setTimeout(() => {
+                isBattleRunning = false;
+                btnDone.click();
+            }, 2500);
+        }
     }
 }
 
@@ -1750,5 +1763,190 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnLoad) {
         btnLoad.addEventListener('click', loadGame);
     }
-    
+
+    // 오토 플레이 버튼을 찾아냅니다.
+    const btnAutoPlay = document.getElementById('btn-autoplay');
+    if (btnAutoPlay) {
+        btnAutoPlay.addEventListener('click', () => {
+            if (isAutoPlaying) stopAutoPlay();
+            else startAutoPlay();
+        });
+    }
 });
+
+// --- [오토 플레이 (자동 진행) 매크로 시스템] ---
+function startAutoPlay() {
+    if (isAutoPlaying) return;
+    isAutoPlaying = true;
+    
+    const btn = document.getElementById('btn-autoplay');
+    if(btn) {
+        btn.innerHTML = '🛑 오토 플레이 중지';
+        btn.style.backgroundColor = '#c0392b';
+        btn.style.borderColor = '#922b21';
+    }
+    
+    // 1초 단위로 AI 행동 수행
+    autoPlayInterval = setInterval(runAutoPlayCycle, 1000);
+    showMainMessage(`<div class="result-msg" style="background-color:#8e44ad; font-weight:bold;">🤖 오토 플레이 모드가 가동되었습니다! (자동 턴 진행 중)</div>`);
+}
+
+function stopAutoPlay() {
+    if (!isAutoPlaying) return;
+    isAutoPlaying = false;
+    isBattleRunning = false;
+    
+    if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+    }
+    
+    const btn = document.getElementById('btn-autoplay');
+    if(btn) {
+        btn.innerHTML = '🤖 오토 플레이 시작';
+        btn.style.backgroundColor = '#8e44ad';
+        btn.style.borderColor = '#732d91';
+    }
+    showMainMessage(`<div class="error-msg" style="background-color:#c0392b; color:white;">🛑 오토 플레이가 중지되었습니다.</div>`);
+}
+
+function runAutoPlayCycle() {
+    if (isBattleRunning) return; // 전투 중에는 타이머 행동 일시 정지
+
+    const btnNext = document.getElementById('btn-next-turn');
+
+    // 명령서가 0이면 무조건 턴 넘기기
+    if (playerState.actionPoints <= 0) {
+        btnNext.click();
+        return;
+    }
+
+    // 1순위: 재야 무장 수색 및 등용
+    if (freeAgents.length > 0) {
+        searchTalents();
+        return;
+    }
+
+    // 2순위: 내정 100 달성 검사 (아군 도시 전체 대상)
+    let needsDomestic = false;
+    for (const cName in cities) {
+        const city = cities[cName];
+        if (city.owner === '조조') {
+            if (city.agriculture < 100 || city.commerce < 100 || city.floodControl < 100) {
+                needsDomestic = true;
+                break;
+            }
+        }
+    }
+    if (needsDomestic) {
+        runAutoDomestic(); // 남은 명령서를 모두 소모해서 내정을 돌림
+        return;
+    }
+
+    // 3순위: 훈련도 100 미만인 곳이 있다면 자동 훈련 (명령서 1개씩 차감)
+    let trainedSomething = false;
+    for (const cName in cities) {
+        const city = cities[cName];
+        if (city.owner === '조조' && city.training < 100) {
+            // 군량이 500 이상인지 확인
+            if (city.grain >= 500) {
+                playerState.actionPoints -= 1;
+                city.grain -= 500;
+                const increaseVal = Math.floor(Math.random() * 11) + 10;
+                city.training = Math.min(100, city.training + increaseVal);
+                updateStatusBar();
+                
+                selectCity(cName);
+                const infoPanel = document.getElementById('city-info-panel');
+                if(infoPanel) {
+                    infoPanel.innerHTML += `<div class="result-msg" style="background-color:#2980b9;">🤖 자동 훈련: ${cName} 성의 부대 훈련도가 상승했습니다!</div>`;
+                }
+                trainedSomething = true;
+                return; // 루프 1회 종료
+            }
+        }
+    }
+
+    // 4순위: 예비 병력 전체 장수 대상 균등 배분
+    if (!trainedSomething) {
+        let totalSoldiers = 0;
+        for (const cName in cities) {
+            if (cities[cName].owner === '조조') {
+                totalSoldiers += cities[cName].soldiers;
+                cities[cName].soldiers = 0; 
+            }
+        }
+        officers.forEach(o => { totalSoldiers += (o.soldiers || 0); o.soldiers = 0; });
+        
+        const officerCount = officers.length;
+        if (officerCount > 0 && totalSoldiers > 0) {
+            const perOfficer = Math.floor(totalSoldiers / officerCount);
+            const remainder = totalSoldiers % officerCount;
+            officers.forEach(o => o.soldiers = perOfficer);
+            
+            // 자투리는 첫번째 아군 성에 보관
+            const playerCities = Object.keys(cities).filter(c => cities[c].owner === '조조');
+            if (playerCities.length > 0) {
+                cities[playerCities[0]].soldiers = remainder;
+            }
+            updateStatusBar();
+        }
+    }
+
+    // 5순위: 인접한 적 거점 타겟팅 및 자동 출병 (전원 출격)
+    let targetEnemy = null;
+    let startCity = null;
+
+    // 길(roadRoutes)을 탐색하여 아군 성과 연결된 적 성을 찾음
+    for (const route of roadRoutes) {
+        const fromCity = cities[route.from];
+        const toCity = cities[route.to];
+        if (fromCity && toCity) {
+            if (fromCity.owner === '조조' && toCity.owner !== '조조') {
+                startCity = route.from;
+                targetEnemy = route.to;
+                break;
+            } else if (toCity.owner === '조조' && fromCity.owner !== '조조') {
+                startCity = route.to;
+                targetEnemy = route.from;
+                break;
+            }
+        }
+    }
+
+    if (targetEnemy && startCity) {
+        // 출병 군량 검증 (1,000 이상 필요)
+        if (cities[startCity].grain < 1000) {
+            // 군량이 부족하면 명령서를 전부 소모시켜 강제 턴 종료 유도 (다음 턴에서 세금/군량 획득)
+            playerState.actionPoints = 0; 
+            return;
+        }
+
+        // 출전할 모든 아군 무장 구성 및 총 병력 산출
+        let totalWarSoldiers = 0;
+        let selectedIdxs = [];
+        officers.forEach((off, idx) => {
+            selectedIdxs.push(idx);
+            totalWarSoldiers += (off.soldiers || 0);
+        });
+
+        if (totalWarSoldiers > 0) {
+            // 자원 소모 및 출병
+            playerState.actionPoints -= 1;
+            cities[startCity].grain -= 1000;
+            updateStatusBar();
+
+            // 전투 화면으로 진입하면서 매크로 타이머의 행동 방지 플래그(isBattleRunning) 켬
+            isBattleRunning = true;
+            selectCity(targetEnemy);
+            executeBattleSimulation(targetEnemy, selectedIdxs, totalWarSoldiers, startCity);
+        } else {
+            // 장수들의 병력이 아예 0명이라 출병 못함 (돈/군량 모자라 징병도 안됨) -> 강제 턴 넘기기
+            playerState.actionPoints = 0;
+        }
+    } else {
+        // 연결된 적 성이 없으면 천하통일!
+        stopAutoPlay();
+        showMainMessage(`<div class="result-msg" style="font-size:1.5em; color:#f1c40f;">👑 천하통일 달성! 더 이상 인접한 적군이 없습니다! 👑</div>`);
+    }
+}
