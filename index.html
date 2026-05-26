@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Samgukgi</title>
+    <!-- 디자인 스타일을 연결합니다 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 전체 게임 화면을 감싸는 박스 -->
+    <div id="game-container">
+        <!-- 상단 헤더 부분 (제목과 턴 정보) -->
+        <header class="game-header">
+            <h1>Web Samgukgi</h1>
+            <div class="system-buttons" style="display: flex; gap: 6px;">
+                <button class="btn-system" id="btn-save">저장</button>
+                <button class="btn-system" id="btn-load">로드</button>
+            </div>
+            <div id="turn-info">190년 1월</div>
+        </header>
+
+        <!-- 핵심 정보 표시줄 (군주 초상화 및 이름, 명성, 명령서) -->
+        <section class="status-bar">
+            <div class="ruler-profile">
+                <img src="ruler_jojo.png" alt="군주 초상화" class="ruler-portrait">
+                <div class="status-item"><span>군주:</span> <span id="ruler-name">-</span></div>
+            </div>
+            <div class="status-item"><span>명성:</span> <span id="fame-val">100</span></div>
+            <div class="status-item"><span>명령서:</span> <span><span id="action-point">3</span><span class="edit-btn" title="명령서 수정" onclick="modifyActionPoints()">✏️</span></span></div>
+            <div class="status-item"><span>금:</span> <span><span id="status-gold">0</span><span class="edit-btn" title="금 수정" onclick="modifyStatusBarResource('gold', '금')">✏️</span></span></div>
+            <div class="status-item"><span>군량:</span> <span><span id="status-grain">0</span><span class="edit-btn" title="군량 수정" onclick="modifyStatusBarResource('grain', '군량')">✏️</span></span></div>
+            <div class="status-item"><span>병력:</span> <span><span id="status-soldiers">0</span><span class="edit-btn" title="병력 수정" onclick="modifyStatusBarResource('soldiers', '예비 병력')">✏️</span></span></div>
+        </section>
+
+        <!-- 상단 고정 성 이미지 영역 -->
+        <div style="text-align: center; background-color: #1a1a1a; padding: 10px 0; border-bottom: 1px solid #333;">
+            <img src="castle.png" alt="거성 이미지" class="castle-image" style="max-height: 120px; width: auto; margin: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.8);">
+        </div>
+
+        <!-- 중앙 메인 화면 (지도나 이벤트 표시) -->
+        <main class="game-main" style="padding: 10px;">
+            <div class="main-content" style="width: 100%;">
+                <p>환영합니다! 천하통일의 위업을 달성하세요.</p>
+            </div>
+        </main>
+
+        <!-- 하단 메뉴 버튼들 (내정, 군사 등) -->
+        <nav class="action-menu">
+            <button class="btn" id="btn-domestic">내정</button>
+            <button class="btn" id="btn-military">군사</button>
+            <button class="btn" id="btn-personnel">인사</button>
+            <button class="btn" id="btn-war" disabled>출병</button>
+            <button class="btn" id="btn-next-turn">턴 종료</button>
+        </nav>
+    </div>
+
+    <!-- 자바스크립트 동작 파일을 연결합니다 -->
+    <script src="script.js"></script>
+</body>
+</html>

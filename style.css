@@ -1,0 +1,583 @@
+/* 기본 설정: 모든 요소의 여백을 없애고 박스 크기를 테두리 기준으로 맞춥니다 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 몸통(body) 설정: 다크 테마 배경과 기본 글씨체를 지정합니다 */
+body {
+    background-color: #121212; /* 아주 어두운 회색 (다크모드 배경) */
+    color: #e0e0e0; /* 밝은 회색 글씨 */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* 읽기 쉬운 글꼴 */
+    display: flex;
+    justify-content: center; /* 화면을 가로 중앙에 배치 */
+    align-items: center; /* 화면을 세로 중앙에 배치 */
+    min-height: 100vh; /* 화면 전체 높이를 채움 */
+}
+
+/* 게임 전체를 감싸는 컨테이너 박스 */
+#game-container {
+    width: 100%;
+    max-width: 600px; /* 모바일과 PC 모두 보기 좋게 최대 너비 제한 */
+    background-color: #1e1e1e; /* 배경보다 조금 더 밝은 패널 색상 */
+    border-radius: 8px; /* 모서리를 둥글게 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* 입체감을 주는 그림자 효과 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 박스 밖으로 벗어나는 것을 숨김 */
+}
+
+/* 상단 헤더 영역 */
+.game-header {
+    background-color: #2c3e50; /* 어두운 푸른색 포인트 */
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between; /* 내용물(제목, 날짜)을 양쪽 끝으로 벌림 */
+    align-items: center;
+}
+
+.game-header h1 {
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+/* 상태창 영역 (군주 초상화, 명성, 행동력 등 정보 표시) */
+.status-bar {
+    display: flex;
+    justify-content: space-around; /* 정보들의 간격을 일정하게 띄움 */
+    align-items: center; /* 세로 가운데 정렬 */
+    background-color: #2a2a2a;
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    flex-wrap: wrap; /* 좁은 화면이나 모바일에서 아이템들이 겹치지 않고 줄바꿈되도록 함 */
+    gap: 8px; /* 줄바꿈되었을 때 요소 사이의 여백 */
+}
+
+/* 초상화와 이름을 가로로 묶어주는 래퍼 */
+.ruler-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 사진과 텍스트 사이 간격 */
+}
+
+/* 군주 초상화 디자인 */
+.ruler-portrait {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%; /* 동그란 원형으로 자름 */
+    object-fit: cover; /* 이미지가 찌그러지지 않고 꽉 차게 */
+    border: 2px solid #ffd700; /* 금색 테두리 */
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); /* 은은한 빛 효과 */
+}
+
+.status-item {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* 초상화 이미지 테두리 상자 */
+.portrait-container {
+    flex-shrink: 0; /* 화면이 좁아져도 이미지가 줄어들지 않도록 보호 */
+    width: 60px;
+    height: 60px;
+    border-radius: 50%; /* 동그란 모양으로 만듦 */
+    border: 2px solid #ffd700; /* 황금색 테두리 */
+    overflow: hidden; /* 원형 밖으로 삐져나가는 이미지 가림 */
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); /* 미세한 황금색 광채 효과 */
+}
+
+/* 초상화 내부 이미지 */
+#ruler-portrait {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 원 안에 꽉 차도록 비율 맞춤 */
+}
+
+/* 상세 정보들을 가로로 정렬해 주는 박스 */
+.status-details {
+    flex-grow: 1; /* 남는 공간을 모두 채움 */
+    display: flex;
+    justify-content: space-around; /* 정보들을 일정하게 균등 배치 */
+    align-items: center;
+}
+
+/* 각각의 정보 아이템 (군주, 명성, 명령서) */
+.status-item {
+    font-size: 1rem;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column; /* 라벨과 값을 위아래로 배치 */
+    align-items: center;
+    gap: 3px;
+}
+
+.status-item span:first-child {
+    font-size: 0.8rem;
+    color: #999; /* 라벨 이름은 조금 더 어둡고 작게 표시 */
+}
+
+
+/* 중앙 메인 화면 (안내 문구 표시) */
+.game-main {
+    padding: 30px 20px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 성 이미지 디자인 */
+.castle-image {
+    width: 100%;
+    max-width: 400px; /* 이미지가 너무 커지지 않게 제한 */
+    height: auto;
+    border-radius: 12px; /* 모서리를 둥글게 깎음 */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8); /* 묵직한 그림자 효과 */
+    margin-bottom: 20px; /* 아래쪽 글씨와 간격을 띄움 */
+    border: 2px solid #34495e; /* 테두리를 주어 액자 같은 느낌 부여 */
+}
+
+/* 하단 버튼 메뉴 영역 */
+.action-menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 버튼을 2칸씩 나눔 (스마트폰에서도 예쁘게 보이도록) */
+    gap: 10px; /* 버튼 사이의 빈 공간 */
+    padding: 20px;
+    background-color: #1a1a1a;
+}
+
+/* 턴 종료 버튼이 하단 가로폭을 전체 차지하도록 설정 */
+#btn-next-turn {
+    grid-column: span 2;
+}
+
+/* 출병 버튼 전용 암적색 전쟁 테마 스타일 */
+#btn-war {
+    background-color: #78281f;
+    border: 1px solid #943126;
+}
+
+#btn-war:hover:not(:disabled) {
+    background-color: #b03a2e;
+}
+
+/* 각 버튼의 기본 디자인 */
+.btn {
+    background-color: #34495e; /* 버튼 기본 색상 */
+    color: white; /* 버튼 글씨 흰색 */
+    border: none;
+    padding: 15px;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    cursor: pointer; /* 마우스 올리면 손가락 모양으로 변경 */
+    transition: background-color 0.2s; /* 부드러운 색상 전환 효과 */
+}
+
+/* 버튼에 마우스를 올렸을 때 색상 변화 */
+.btn:hover {
+    background-color: #4ca1af; /* 마우스를 올리면 약간 더 밝은 색상으로 변경 */
+}
+
+/* --- [내정 메뉴 스타일 추가] --- */
+/* 내정 메뉴를 감싸는 전체 박스 */
+.domestic-menu {
+    width: 100%;
+    text-align: center;
+}
+
+/* 도시 이름 제목 */
+.domestic-menu h3 {
+    font-size: 1.3rem;
+    color: #4ca1af; /* 포인트 컬러 */
+    margin-bottom: 15px;
+}
+
+/* 도시 세부 능력치 표시 판넬 */
+.city-stats {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #3a3a3a;
+}
+
+.city-stats p {
+    font-size: 1rem;
+    margin: 8px 0;
+    color: #ccc;
+}
+
+/* 주요 수치 강조용 골드 색상 */
+.city-stats strong {
+    color: #ffd700;
+}
+
+/* 내정 버튼들을 배치하는 영역 */
+.domestic-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 모바일보다 큰 화면(가로 480px 이상)에서는 버튼을 가로로 정렬 */
+@media (min-width: 480px) {
+    .domestic-actions {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* 내정 하위 명령 전용 서브 버튼 */
+.btn-sub {
+    background-color: #2c3e50;
+    border: 1px solid #34495e;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    flex: 1 1 40%;
+    min-width: 120px;
+}
+
+.btn-sub:hover {
+    background-color: #1a252f;
+}
+
+/* 돌아가기 버튼 전용 색상 (회색 계열) */
+#btn-dev-back {
+    background-color: #7f8c8d;
+}
+
+#btn-dev-back:hover {
+    background-color: #95a5a6;
+}
+
+/* 내정 수행 결과 및 오류 메세지 디자인 */
+.result-msg, .error-msg {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    animation: fadeIn 0.3s ease; /* 부드럽게 나타나는 효과 */
+}
+
+.result-msg {
+    background-color: #27ae60; /* 초록색 배경 (성공) */
+    color: white;
+}
+
+.error-msg {
+    background-color: #c0392b; /* 빨간색 배경 (실패/오류) */
+    color: white;
+}
+
+/* 나타나기 애니메이션 정의 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- [인사 테이블 스타일 추가] --- */
+/* 장수 목록 테이블 */
+.officer-table {
+    width: 100%;
+    border-collapse: collapse; /* 테두리 경계선 합치기 */
+    margin: 15px 0;
+    font-size: 0.9rem;
+    background-color: #252525; /* 진한 회색 배경 */
+    border-radius: 6px;
+    overflow: hidden; /* 모서리가 모나지 않게 숨김 */
+    border: 1px solid #3a3a3a;
+}
+
+.officer-table th, .officer-table td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #3a3a3a;
+}
+
+.officer-table th {
+    background-color: #2c3e50; /* 헤더 파란색 포인트 */
+    color: #fff;
+    font-weight: bold;
+}
+
+/* 테이블의 각 줄에 마우스 올렸을 때의 하이라이트 */
+.officer-table tr:hover {
+    background-color: #2d2d2d;
+}
+
+/* 충성도 수준에 따른 수치 색상 강조 */
+.loyalty-low {
+    color: #e74c3c; /* 낮은 충성도는 빨간색 */
+    font-weight: bold;
+}
+
+.loyalty-normal {
+    color: #2ecc71; /* 높은 충성도는 초록색 */
+    font-weight: bold;
+}
+
+/* 자원 편집 연필(✏️) 버튼 스타일 */
+.edit-btn {
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-left: 6px;
+    display: inline-block;
+    transition: transform 0.1s ease;
+}
+
+.edit-btn:hover {
+    transform: scale(1.2); /* 마우스 올리면 크기가 살짝 늘어남 */
+}
+
+/* --- [전술 지도 스타일 추가] --- */
+/* 지도판 전체 프레임 */
+.map-board {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.map-title {
+    font-size: 1.2rem;
+    color: #4ca1af;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+/* 지도 영역 컨테이너 */
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 480px; /* 31개 도시 배치를 위해 480px로 확대하여 충분한 간격 확보 */
+    background-color: #1a1a1a;
+    background-image: radial-gradient(#2d3748 1px, transparent 1px);
+    background-size: 15px 15px; /* 격자 무늬 전술판 배경 */
+    border: 2px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+/* 성곽 거점 노드 스타일 */
+.city-node {
+    position: absolute;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    border: 2px solid #555;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* 마우스 호버 효과 */
+.city-node:hover {
+    transform: scale(1.15);
+    z-index: 10;
+}
+
+/* 선택된 도시 깜빡임 광채 효과 */
+.city-node.selected-active {
+    animation: nodePulse 1.5s infinite alternate;
+}
+
+@keyframes nodePulse {
+    from {
+        box-shadow: 0 0 4px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 215, 0, 0.6);
+        border-color: #ffd700;
+    }
+    to {
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 215, 0, 1);
+        border-color: #fff;
+    }
+}
+
+/* 세력별 컬러 브랜딩 */
+.city-node.owner-cho {
+    background-color: #1f3a52; /* 조조군: 짙은 남색 */
+    border-color: #3182ce;
+}
+.city-node.owner-cho:hover {
+    box-shadow: 0 0 15px rgba(49, 130, 206, 0.8);
+}
+
+.city-node.owner-dong {
+    background-color: #631c1c; /* 동탁군: 붉은색 */
+    border-color: #e53e3e;
+}
+.city-node.owner-dong:hover {
+    box-shadow: 0 0 15px rgba(229, 62, 62, 0.8);
+}
+
+.city-node.owner-yuan {
+    background-color: #5c4d18; /* 원소군: 황금색 */
+    border-color: #dd6b20;
+}
+.city-node.owner-yuan:hover {
+    box-shadow: 0 0 15px rgba(221, 107, 32, 0.8);
+}
+
+.city-node.owner-tao {
+    background-color: #1a4731; /* 도겸군: 숲색 */
+    border-color: #38a169;
+}
+.city-node.owner-tao:hover {
+    box-shadow: 0 0 15px rgba(56, 161, 105, 0.8);
+}
+
+.city-node.owner-sun {
+    background-color: #4a2040; /* 손책군: 자줏빛 */
+    border-color: #b7791f;
+}
+.city-node.owner-sun:hover {
+    box-shadow: 0 0 15px rgba(183, 121, 31, 0.8);
+}
+
+.city-node.owner-liu {
+    background-color: #7e5109; /* 유언군: 짙은 주황색 */
+    border-color: #ca6f1e;
+}
+.city-node.owner-liu:hover {
+    box-shadow: 0 0 15px rgba(202, 111, 30, 0.8);
+}
+
+.city-node.owner-bia {
+    background-color: #117864; /* 유표군: 녹갈색 */
+    border-color: #1abc9c;
+}
+.city-node.owner-bia:hover {
+    box-shadow: 0 0 15px rgba(26, 188, 156, 0.8);
+}
+
+.city-node.owner-gong {
+    background-color: #5b2c6f; /* 공손찬군: 보라색 */
+    border-color: #af7ac5;
+}
+.city-node.owner-gong:hover {
+    box-shadow: 0 0 15px rgba(175, 122, 197, 0.8);
+}
+
+.city-node.owner-kong {
+    background-color: #21618c; /* 공융군: 청갈색 */
+    border-color: #5dade2;
+}
+.city-node.owner-kong:hover {
+    box-shadow: 0 0 15px rgba(93, 173, 226, 0.8);
+}
+
+.city-node.owner-liu-bei {
+    background-color: #1e8449; /* 유비군: 초록색 */
+    border-color: #2ecc71;
+}
+.city-node.owner-liu-bei:hover {
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.8);
+}
+
+.city-node.owner-zhang {
+    background-color: #424949; /* 장양군: 진회색 */
+    border-color: #7f8c8d;
+}
+.city-node.owner-zhang:hover {
+    box-shadow: 0 0 15px rgba(127, 140, 141, 0.8);
+}
+
+/* 거점 성곽 하단 세력 표기 */
+.owner-tag {
+    font-size: 0.65rem;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-top: 2px;
+    color: #ffd700;
+}
+
+/* 영토 정보 상세판 */
+.city-detail-panel {
+    width: 100%;
+    background-color: #262626;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.city-detail-panel h4 {
+    color: #4ca1af;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.city-detail-panel p {
+    margin: 5px 0;
+    color: #ddd;
+}
+
+.city-detail-panel .warning-txt {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+/* 비활성화된 메뉴 버튼 스타일 (타 세력 선택 시 회색 차단 효과) */
+.btn:disabled {
+    background-color: #444 !important;
+    color: #777 !important;
+    cursor: not-allowed;
+    border-color: #333 !important;
+    opacity: 0.5;
+}
+
+/* 테이블 내부 병력 배속 미니 버튼 스타일 */
+.btn-assign {
+    background-color: #2980b9; /* 조화로운 푸른색 */
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-assign:hover {
+    background-color: #3498db;
+}
+
+/* 시스템 조작용 미니 버튼 (저장/로드) */
+.btn-system {
+    background-color: #34495e;
+    color: #e0e0e0;
+    border: 1px solid #4f5d73;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-system:hover {
+    background-color: #1abc9c;
+    border-color: #16a085;
+    color: white;
+}
+
+
+
+
+

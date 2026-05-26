@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"c:\\\\samgukgi\\\\index.html\")",
+      "Bash(Start-Process \"c:\\\\samgukgi\\\\index.html\")",
+      "PowerShell(Start-Process \"c:\\\\samgukgi\\\\index.html\")",
+      "PowerShell(node --version)",
+      "PowerShell(npx playwright --version 2>$null)",
+      "PowerShell(npx playwright install chromium --with-deps 2>&1)"
+    ]
+  }
+}
