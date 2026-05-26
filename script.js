@@ -1867,30 +1867,45 @@ function runAutoPlayCycle() {
         }
     }
 
-    // 4순위: 예비 병력 전체 장수 대상 균등 배분
-    if (!trainedSomething) {
-        let totalSoldiers = 0;
-        for (const cName in cities) {
-            if (cities[cName].owner === '조조') {
-                totalSoldiers += cities[cName].soldiers;
-                cities[cName].soldiers = 0; 
-            }
+    // 4순위: 예비 병력 전체 장수 대상 균등 배분 (출병 준비)
+    // 훈련을 모두 마쳤다면(trainedSomething == false) 공격 대기 상태입니다.
+    let totalSoldiers = 0;
+    let reserveSoldiers = 0; // 예비 병력의 총합
+
+    for (const cName in cities) {
+        if (cities[cName].owner === '조조') {
+            totalSoldiers += cities[cName].soldiers;
+            reserveSoldiers += cities[cName].soldiers; // 새로 얻은 예비 병력들
+            cities[cName].soldiers = 0; 
         }
-        officers.forEach(o => { totalSoldiers += (o.soldiers || 0); o.soldiers = 0; });
+    }
+    officers.forEach(o => { totalSoldiers += (o.soldiers || 0); o.soldiers = 0; });
+    
+    const officerCount = officers.length;
+    let distributedNow = false;
+
+    if (officerCount > 0 && totalSoldiers > 0) {
+        const perOfficer = Math.floor(totalSoldiers / officerCount);
+        const remainder = totalSoldiers % officerCount;
+        officers.forEach(o => o.soldiers = perOfficer);
         
-        const officerCount = officers.length;
-        if (officerCount > 0 && totalSoldiers > 0) {
-            const perOfficer = Math.floor(totalSoldiers / officerCount);
-            const remainder = totalSoldiers % officerCount;
-            officers.forEach(o => o.soldiers = perOfficer);
-            
-            // 자투리는 첫번째 아군 성에 보관
-            const playerCities = Object.keys(cities).filter(c => cities[c].owner === '조조');
-            if (playerCities.length > 0) {
-                cities[playerCities[0]].soldiers = remainder;
-            }
-            updateStatusBar();
+        // 자투리는 첫번째 아군 성에 보관
+        const playerCities = Object.keys(cities).filter(c => cities[c].owner === '조조');
+        if (playerCities.length > 0) {
+            cities[playerCities[0]].soldiers = remainder;
         }
+        
+        // 예비 병력이 충분히 모여있었다면 새로 배분한 것으로 간주하고 화면에 알림
+        if (reserveSoldiers >= officerCount) {
+            distributedNow = true;
+            updateStatusBar();
+            showMainMessage(`<div class="result-msg" style="background-color:#27ae60;">🤖 자동 출전 준비: 아군 총 병력 ${totalSoldiers.toLocaleString()}명을 모든 장수에게 1/N 균등 분배 완료!</div>`);
+        }
+    }
+
+    // 방금 병력 배분을 수행했다면 사용자가 확인할 수 있도록 여기서 루프 1회 정지 (다음 주기에 출병)
+    if (distributedNow) {
+        return;
     }
 
     // 5순위: 인접한 적 거점 타겟팅 및 자동 출병 (전원 출격)
