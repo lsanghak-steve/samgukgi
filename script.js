@@ -466,8 +466,8 @@ function showDomesticMenu() {
     document.getElementById('btn-dev-back').addEventListener('click', showMainMessage);
 }
 
-// 실제로 도시의 농업/상업/치수 등 스탯을 상승시키는 로직입니다.
-function developCity(statType, statLabel) {
+// 도시의 농업/상업/치수 3가지 수치를 한 번에 상승시키는 로직입니다.
+function developAllCityStats() {
     const resultDiv = document.getElementById('domestic-result');
     const activeCity = cities[selectedCityName];
     
@@ -477,9 +477,9 @@ function developCity(statType, statLabel) {
         return;
     }
 
-    // 2. 이미 해당 개발도가 최대값 100에 도달했는지 확인합니다.
-    if (activeCity[statType] >= 100) {
-        resultDiv.innerHTML = `<div class="error-msg">⚠️ 이미 ${statLabel}가 최대치(100)입니다!</div>`;
+    // 2. 3가지 개발도가 모두 최대값 100에 도달했는지 확인합니다.
+    if (activeCity.agriculture >= 100 && activeCity.commerce >= 100 && activeCity.floodControl >= 100) {
+        resultDiv.innerHTML = `<div class="error-msg">⚠️ 이미 모든 내정 수치(농업/상업/치수)가 최대치(100)입니다!</div>`;
         return;
     }
 
@@ -487,16 +487,22 @@ function developCity(statType, statLabel) {
     playerState.actionPoints -= 1;
     updateStatusBar();
     
-    // 4. 개발도를 5 ~ 15 사이의 무작위 값만큼 올립니다. (최대 100 제한)
-    const increaseVal = Math.floor(Math.random() * 11) + 5;
-    activeCity[statType] = Math.min(100, activeCity[statType] + increaseVal);
+    // 4. 각각의 개발도를 5 ~ 15 사이의 무작위 값만큼 올립니다. (최대 100 제한)
+    const incAgri = Math.floor(Math.random() * 11) + 5;
+    const incComm = Math.floor(Math.random() * 11) + 5;
+    const incFlood = Math.floor(Math.random() * 11) + 5;
+
+    let msgParts = [];
+    if (activeCity.agriculture < 100) { activeCity.agriculture = Math.min(100, activeCity.agriculture + incAgri); msgParts.push(`농업 +${incAgri}`); }
+    if (activeCity.commerce < 100) { activeCity.commerce = Math.min(100, activeCity.commerce + incComm); msgParts.push(`상업 +${incComm}`); }
+    if (activeCity.floodControl < 100) { activeCity.floodControl = Math.min(100, activeCity.floodControl + incFlood); msgParts.push(`치수 +${incFlood}`); }
 
     // 5. 변경된 수치를 화면에 다시 그리기 위해 내정 메뉴를 새로고침합니다.
     showDomesticMenu();
 
     // 6. 수행 성공 결과를 화면 하단에 안내 메시지로 보여줍니다.
     document.getElementById('domestic-result').innerHTML = `
-        <div class="result-msg">✨ ${statLabel} 개발에 성공했습니다! (수치 +${increaseVal})</div>
+        <div class="result-msg">✨ 종합 내정 개발 성공! (${msgParts.join(', ')})</div>
     `;
 }
 
